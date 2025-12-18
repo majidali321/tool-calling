@@ -81,7 +81,7 @@ def main():
     if prompt := st.chat_input("Ask about weather, stock prices, or anything else..."):
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
-        st.session_state.chat_history.append({"role": "user", "content": prompt})
+        # For Gemini, we'll format the history correctly when starting the chat
 
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -93,12 +93,30 @@ def main():
             try:
                 # Create the generative model with tools
                 model = genai.GenerativeModel(
-                    model_name="gemini-1.5-flash",
+                    model_name="gemini-1.5-pro-latest",
                     tools=[get_weather, get_stock_price]
                 )
 
+                # Format the chat history for Gemini
+                formatted_history = []
+                for msg in st.session_state.chat_history[:-1]:  # Exclude current user message
+                    if msg["role"] == "user":
+                        formatted_history.append(
+                            genai.protos.Content(
+                                role="user",
+                                parts=[genai.protos.Part(text=msg["content"])]
+                            )
+                        )
+                    elif msg["role"] == "assistant":
+                        formatted_history.append(
+                            genai.protos.Content(
+                                role="model",  # Gemini uses "model" instead of "assistant"
+                                parts=[genai.protos.Part(text=msg["content"])]
+                            )
+                        )
+
                 # Start a chat session with the history
-                chat = model.start_chat(history=st.session_state.chat_history[:-1])  # Exclude current user message
+                chat = model.start_chat(history=formatted_history)
 
                 # Send the user's message to the model
                 response = chat.send_message(prompt)

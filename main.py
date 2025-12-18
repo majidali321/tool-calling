@@ -42,7 +42,7 @@ def main():
     """
     # Create the generative model with tools
     model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
+        model_name="gemini-1.5-pro-latest",
         tools=[get_weather, get_stock_price]
     )
 
